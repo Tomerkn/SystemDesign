@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת השכרת רכב</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav-tabs {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">מערכת השכרת רכב</h1>
+        
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="customers-tab" data-bs-toggle="tab" data-bs-target="#customers" type="button" role="tab">לקוחות</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="vehicles-tab" data-bs-toggle="tab" data-bs-target="#vehicles" type="button" role="tab">רכבים</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="rentals-tab" data-bs-toggle="tab" data-bs-target="#rentals" type="button" role="tab">השכרות</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+            <!-- לקוחות -->
+            <div class="tab-pane fade show active" id="customers" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>הוספת לקוח חדש</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="customerForm">
+                            <div class="mb-3">
+                                <label class="form-label">תעודת זהות</label>
+                                <input type="text" class="form-control" name="id" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">שם מלא</label>
+                                <input type="text" class="form-control" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">טלפון</label>
+                                <input type="tel" class="form-control" name="phone" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">אימייל</label>
+                                <input type="email" class="form-control" name="email" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">הוסף לקוח</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h5>רשימת לקוחות</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="customersList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- רכבים -->
+            <div class="tab-pane fade" id="vehicles" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>הוספת רכב חדש</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="vehicleForm">
+                            <div class="mb-3">
+                                <label class="form-label">מספר רישוי</label>
+                                <input type="text" class="form-control" name="license_plate" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">יצרן</label>
+                                <input type="text" class="form-control" name="brand" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">דגם</label>
+                                <input type="text" class="form-control" name="model" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">שנת ייצור</label>
+                                <input type="number" class="form-control" name="year" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">הוסף רכב</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h5>רשימת רכבים</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="vehiclesList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- השכרות -->
+            <div class="tab-pane fade" id="rentals" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>הוספת השכרה חדשה</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="rentalForm">
+                            <div class="mb-3">
+                                <label class="form-label">תעודת זהות לקוח</label>
+                                <input type="text" class="form-control" name="customer_id" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">מספר רישוי רכב</label>
+                                <input type="text" class="form-control" name="vehicle_id" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">תאריך התחלה</label>
+                                <input type="datetime-local" class="form-control" name="start_date" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">תאריך סיום</label>
+                                <input type="datetime-local" class="form-control" name="end_date" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">מחיר כולל</label>
+                                <input type="number" class="form-control" name="total_price" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">הוסף השכרה</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h5>רשימת השכרות</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="rentalsList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // פונקציות עזר
+        async function fetchData(url) {
+            const response = await fetch(url);
+            return await response.json();
+        }
+
+        async function postData(url, data) {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            return await response.json();
+        }
+
+        // טעינת נתונים
+        async function loadCustomers() {
+            const customers = await fetchData('/api/customers');
+            const customersList = document.getElementById('customersList');
+            customersList.innerHTML = customers.map(customer => `
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <h6>${customer.name}</h6>
+                        <p>תעודת זהות: ${customer.id}</p>
+                        <p>טלפון: ${customer.phone}</p>
+                        <p>אימייל: ${customer.email}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadVehicles() {
+            const vehicles = await fetchData('/api/vehicles');
+            const vehiclesList = document.getElementById('vehiclesList');
+            vehiclesList.innerHTML = vehicles.map(vehicle => `
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <h6>${vehicle.brand} ${vehicle.model}</h6>
+                        <p>מספר רישוי: ${vehicle.license_plate}</p>
+                        <p>שנת ייצור: ${vehicle.year}</p>
+                        <p>סטטוס: ${vehicle.status}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadRentals() {
+            const rentals = await fetchData('/api/rentals');
+            const rentalsList = document.getElementById('rentalsList');
+            rentalsList.innerHTML = rentals.map(rental => `
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <h6>השכרה #${rental.id}</h6>
+                        <p>תעודת זהות לקוח: ${rental.customer_id}</p>
+                        <p>מספר רישוי רכב: ${rental.vehicle_id}</p>
+                        <p>תאריך התחלה: ${new Date(rental.start_date).toLocaleString()}</p>
+                        <p>תאריך סיום: ${new Date(rental.end_date).toLocaleString()}</p>
+                        <p>מחיר: ${rental.total_price} ₪</p>
+                        <p>סטטוס: ${rental.status}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // טעינת נתונים ראשונית
+        loadCustomers();
+        loadVehicles();
+        loadRentals();
+
+        // טיפול בטפסים
+        document.getElementById('customerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            await postData('/api/customers', data);
+            loadCustomers();
+            e.target.reset();
+        });
+
+        document.getElementById('vehicleForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            await postData('/api/vehicles', data);
+            loadVehicles();
+            e.target.reset();
+        });
+
+        document.getElementById('rentalForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            await postData('/api/rentals', data);
+            loadRentals();
+            e.target.reset();
+        });
+    </script>
+</body>
+</html> 

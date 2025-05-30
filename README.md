@@ -1,61 +1,73 @@
-# Car Rental Management System
+# מערכת ניהול השכרת רכבים
 
-A simple car rental management system with a graphical user interface built using Python and SQLite.
+מערכת לניהול השכרת רכבים המאפשרת ניהול לקוחות, רכבים, השכרות ותחזוקה.
 
-## Features
+## תכונות עיקריות
 
-- Customer registration
-- Vehicle rental
-- Vehicle return
-- Rental history viewing
-- Right-to-left (RTL) interface support for Hebrew
+- ניהול לקוחות (הוספה, עריכה, מחיקה)
+- ניהול רכבים (הוספה, עריכה, מחיקה, עדכון סטטוס)
+- ניהול השכרות (יצירה, החזרה, ביטול)
+- ניהול תחזוקה (התראות, מעקב)
+- לוח בקרה עם סטטיסטיקות
+- הזמנה מהירה
 
-## Requirements
+## טכנולוגיות
 
-- Python 3.x
-- tkinter (usually comes with Python)
-- sqlite3 (usually comes with Python)
+- Frontend: React, React Router, Axios
+- Backend: Flask, Flask-SQLAlchemy
+- Database: SQLite
 
-## Installation
+## התקנה
 
-1. Clone or download this repository
-2. Navigate to the project directory
-3. Initialize the database:
+1. התקן את הדרישות:
 ```bash
-python init_db.py
-```
-4. Run the application:
-```bash
-python rental_app.py
+pip install -r requirements.txt
 ```
 
-## Usage
+2. הפעל את השרת:
+```bash
+python app.py
+```
 
-The application has four main tabs:
+3. התקן את הדרישות של ה-Frontend:
+```bash
+cd frontend
+npm install
+```
 
-1. **Customer Registration (רישום לקוח)**
-   - Enter customer ID, name, phone, and email
-   - Click "Add Customer" to register
+4. הפעל את ה-Frontend:
+```bash
+npm start
+```
 
-2. **Rent Vehicle (השכרת רכב)**
-   - Enter customer ID, vehicle license plate, start date, and end date
-   - Click "Rent Vehicle" to process the rental
+## מבנה הפרויקט
 
-3. **Return Vehicle (החזרת רכב)**
-   - Enter vehicle license plate
-   - Click "Return Vehicle" to process the return
+```
+.
+├── app.py                 # קובץ השרת הראשי
+├── requirements.txt       # דרישות Python
+├── frontend/             # תיקיית ה-Frontend
+│   ├── src/             # קוד המקור
+│   │   ├── components/  # קומפוננטות
+│   │   ├── pages/      # דפים
+│   │   ├── services/   # שירותי API
+│   │   └── utils/      # פונקציות עזר
+│   └── public/         # קבצים סטטיים
+└── README.md           # תיעוד
+```
 
-4. **Rental List (רשימת השכרות)**
-   - View all rentals
-   - Click "Refresh" to update the list
+## שימוש
 
-## Sample Vehicles
+1. פתח את הדפדפן בכתובת `http://localhost:3000`
+2. התחבר למערכת
+3. השתמש בתפריט הצד כדי לנווט בין הדפים השונים
 
-The system comes with three sample vehicles pre-loaded:
-- License Plate: 123-456-78
-- License Plate: 234-567-89
-- License Plate: 345-678-90
+## פיתוח
 
-## Date Format
+- ה-Frontend מפותח ב-React ומשתמש ב-React Router לניתוב
+- ה-Backend מפותח ב-Flask ומשתמש ב-SQLAlchemy לניהול בסיס הנתונים
+- התקשורת בין ה-Frontend ל-Backend מתבצעת באמצעות REST API
 
-Enter dates in YYYY-MM-DD format (e.g., 2024-03-20) 
+## רישיון
+
+MIT 

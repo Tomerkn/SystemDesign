@@ -7,58 +7,58 @@ def init_database():  # פונקציה שמייצרת את מסד הנתונים
     # יוצר טבלת לקוחות
     c.execute('''
         CREATE TABLE IF NOT EXISTS Customer (
-            id TEXT PRIMARY KEY,  # ת.ז כמפתח ראשי
-            name TEXT NOT NULL,   # שם (חובה למלא)
-            phone TEXT,           # טלפון
-            email TEXT            # אימייל
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            phone TEXT,
+            email TEXT
         )
     ''')
 
     # יוצר טבלת רכבים
     c.execute('''
         CREATE TABLE IF NOT EXISTS Vehicle (
-            licensePlate TEXT PRIMARY KEY,  # מספר רישוי כמפתח ראשי
-            brand TEXT,                     # יצרן
-            model TEXT,                     # דגם
-            status TEXT DEFAULT 'available'  # סטטוס (ברירת מחדל: פנוי)
+            licensePlate TEXT PRIMARY KEY,
+            brand TEXT,
+            model TEXT,
+            status TEXT DEFAULT 'available'
         )
     ''')
 
     # יוצר טבלת השכרות
     c.execute('''
         CREATE TABLE IF NOT EXISTS Rental (
-            rentalId INTEGER PRIMARY KEY AUTOINCREMENT,  # מספר השכרה (עולה אוטומטית)
-            customerId TEXT,                             # ת.ז של הלקוח
-            vehicleId TEXT,                              # מספר רישוי של הרכב
-            startDate TEXT,                              # תאריך התחלה
-            endDate TEXT,                                # תאריך סיום
-            totalPrice TEXT,                             # מחיר כולל
-            status TEXT DEFAULT 'active',                # סטטוס (ברירת מחדל: פעיל)
-            FOREIGN KEY (customerId) REFERENCES Customer(id),          # קישור ללקוח
-            FOREIGN KEY (vehicleId) REFERENCES Vehicle(licensePlate)   # קישור לרכב
+            rentalId INTEGER PRIMARY KEY AUTOINCREMENT,
+            customerId TEXT,
+            vehicleId TEXT,
+            startDate TEXT,
+            endDate TEXT,
+            totalPrice TEXT,
+            status TEXT DEFAULT 'active',
+            FOREIGN KEY (customerId) REFERENCES Customer(id),
+            FOREIGN KEY (vehicleId) REFERENCES Vehicle(licensePlate)
         )
     ''')
 
     # יוצר טבלת נתוני נהיגה
     c.execute('''
         CREATE TABLE IF NOT EXISTS DrivingData (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,  # מזהה ייחודי
-            vehicleId TEXT,                        # מספר רישוי של הרכב
-            date TEXT,                             # תאריך הנסיעה
-            avgSpeed REAL,                         # מהירות ממוצעת
-            harshBrakes INTEGER,                   # מספר בלימות חזקות
-            FOREIGN KEY (vehicleId) REFERENCES Vehicle(licensePlate)  # קישור לרכב
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            vehicleId TEXT,
+            date TEXT,
+            avgSpeed REAL,
+            harshBrakes INTEGER,
+            FOREIGN KEY (vehicleId) REFERENCES Vehicle(licensePlate)
         )
     ''')
 
     # יוצר טבלת התראות טיפול
     c.execute('''
         CREATE TABLE IF NOT EXISTS MaintenanceAlert (
-            alertId INTEGER PRIMARY KEY AUTOINCREMENT,  # מזהה התראה
-            vehicleId TEXT,                             # מספר רישוי של הרכב
-            dueDate TEXT,                               # תאריך יעד לטיפול
-            type TEXT,                                  # סוג הטיפול
-            FOREIGN KEY (vehicleId) REFERENCES Vehicle(licensePlate)  # קישור לרכב
+            alertId INTEGER PRIMARY KEY AUTOINCREMENT,
+            vehicleId TEXT,
+            dueDate TEXT,
+            type TEXT,
+            FOREIGN KEY (vehicleId) REFERENCES Vehicle(licensePlate)
         )
     ''')
 

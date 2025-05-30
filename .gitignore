@@ -1,17 +1,53 @@
-# Python virtual environment
-venv/
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.env
+venv/
+.venv/
+ENV/
 
-# IDE files
-.vscode/
+# React
+node_modules/
+/frontend/build
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
 .idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
 
 # Database
 *.db
+*.sqlite3
 
-# Environment variables
-.env
+# Misc
+Thumbs.db
 
 # Logs
 *.log 
