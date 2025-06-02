@@ -1,266 +1,323 @@
-<!DOCTYPE html>
-<html lang="he" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מערכת השכרת רכב</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .card {
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .nav-tabs {
-            margin-bottom: 20px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1 class="text-center mb-4">מערכת השכרת רכב</h1>
-        
-        <ul class="nav nav-tabs" id="myTab" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="customers-tab" data-bs-toggle="tab" data-bs-target="#customers" type="button" role="tab">לקוחות</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="vehicles-tab" data-bs-toggle="tab" data-bs-target="#vehicles" type="button" role="tab">רכבים</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="rentals-tab" data-bs-toggle="tab" data-bs-target="#rentals" type="button" role="tab">השכרות</button>
-            </li>
-        </ul>
+{% extends "layout.html" %}
 
-        <div class="tab-content" id="myTabContent">
-            <!-- לקוחות -->
-            <div class="tab-pane fade show active" id="customers" role="tabpanel">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>הוספת לקוח חדש</h5>
-                    </div>
-                    <div class="card-body">
-                        <form id="customerForm">
-                            <div class="mb-3">
-                                <label class="form-label">תעודת זהות</label>
-                                <input type="text" class="form-control" name="id" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">שם מלא</label>
-                                <input type="text" class="form-control" name="name" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">טלפון</label>
-                                <input type="tel" class="form-control" name="phone" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">אימייל</label>
-                                <input type="email" class="form-control" name="email" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">הוסף לקוח</button>
-                        </form>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <h5>רשימת לקוחות</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="customersList"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- רכבים -->
-            <div class="tab-pane fade" id="vehicles" role="tabpanel">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>הוספת רכב חדש</h5>
-                    </div>
-                    <div class="card-body">
-                        <form id="vehicleForm">
-                            <div class="mb-3">
-                                <label class="form-label">מספר רישוי</label>
-                                <input type="text" class="form-control" name="license_plate" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">יצרן</label>
-                                <input type="text" class="form-control" name="brand" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">דגם</label>
-                                <input type="text" class="form-control" name="model" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">שנת ייצור</label>
-                                <input type="number" class="form-control" name="year" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">הוסף רכב</button>
-                        </form>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <h5>רשימת רכבים</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="vehiclesList"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- השכרות -->
-            <div class="tab-pane fade" id="rentals" role="tabpanel">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>הוספת השכרה חדשה</h5>
-                    </div>
-                    <div class="card-body">
-                        <form id="rentalForm">
-                            <div class="mb-3">
-                                <label class="form-label">תעודת זהות לקוח</label>
-                                <input type="text" class="form-control" name="customer_id" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">מספר רישוי רכב</label>
-                                <input type="text" class="form-control" name="vehicle_id" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">תאריך התחלה</label>
-                                <input type="datetime-local" class="form-control" name="start_date" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">תאריך סיום</label>
-                                <input type="datetime-local" class="form-control" name="end_date" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">מחיר כולל</label>
-                                <input type="number" class="form-control" name="total_price" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">הוסף השכרה</button>
-                        </form>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header">
-                        <h5>רשימת השכרות</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="rentalsList"></div>
+{% block content %}
+<!-- מיכל ראשי של הדף -->
+<div class="main-container">
+    <!-- אזור הכותרת וברכת הברוכים הבאים -->
+    <div class="welcome-section mb-5">
+        <div class="card welcome-card">
+            <div class="israel-border">
+                <div class="star-pattern-bg">
+                    <div class="card-body text-center p-5">
+                        <div class="welcome-icon mb-4">
+                            <i class="bi bi-car-front-fill"></i>
+                        </div>
+                        <h1 class="display-4 mb-3 israel-text-shadow">ברוכים הבאים למערכת ניהול השכרת רכבים</h1>
+                        <p class="lead mb-4">מערכת מקצועית לניהול צי רכב והשכרות</p>
+                        <div class="welcome-decoration">
+                            <div class="star-line"></div>
+                            <i class="bi bi-star-fill"></i>
+                            <div class="star-line"></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // פונקציות עזר
-        async function fetchData(url) {
-            const response = await fetch(url);
-            return await response.json();
-        }
-
-        async function postData(url, data) {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            });
-            return await response.json();
-        }
-
-        // טעינת נתונים
-        async function loadCustomers() {
-            const customers = await fetchData('/api/customers');
-            const customersList = document.getElementById('customersList');
-            customersList.innerHTML = customers.map(customer => `
-                <div class="card mb-2">
-                    <div class="card-body">
-                        <h6>${customer.name}</h6>
-                        <p>תעודת זהות: ${customer.id}</p>
-                        <p>טלפון: ${customer.phone}</p>
-                        <p>אימייל: ${customer.email}</p>
+    <!-- שורת הסטטיסטיקות -->
+    <div class="row stats-row">
+        <!-- קרטיסיית רכבים במערכת -->
+        <div class="col-md-3">
+            <div class="card stats-card h-100">
+                <div class="israel-stats-border">
+                    <div class="card-body text-center">
+                        <div class="stats-icon mb-3 car-icon">
+                            <i class="bi bi-car-front"></i>
+                        </div>
+                        <h3 class="stats-number">{{ cars }}</h3>
+                        <p class="stats-label">רכבים במערכת</p>
                     </div>
                 </div>
-            `).join('');
-        }
-
-        async function loadVehicles() {
-            const vehicles = await fetchData('/api/vehicles');
-            const vehiclesList = document.getElementById('vehiclesList');
-            vehiclesList.innerHTML = vehicles.map(vehicle => `
-                <div class="card mb-2">
-                    <div class="card-body">
-                        <h6>${vehicle.brand} ${vehicle.model}</h6>
-                        <p>מספר רישוי: ${vehicle.license_plate}</p>
-                        <p>שנת ייצור: ${vehicle.year}</p>
-                        <p>סטטוס: ${vehicle.status}</p>
+            </div>
+        </div>
+        <!-- קרטיסיית לקוחות -->
+        <div class="col-md-3">
+            <div class="card stats-card h-100">
+                <div class="israel-stats-border">
+                    <div class="card-body text-center">
+                        <div class="stats-icon mb-3 customers-icon">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <h3 class="stats-number">{{ customers }}</h3>
+                        <p class="stats-label">לקוחות רשומים</p>
                     </div>
                 </div>
-            `).join('');
-        }
-
-        async function loadRentals() {
-            const rentals = await fetchData('/api/rentals');
-            const rentalsList = document.getElementById('rentalsList');
-            rentalsList.innerHTML = rentals.map(rental => `
-                <div class="card mb-2">
-                    <div class="card-body">
-                        <h6>השכרה #${rental.id}</h6>
-                        <p>תעודת זהות לקוח: ${rental.customer_id}</p>
-                        <p>מספר רישוי רכב: ${rental.vehicle_id}</p>
-                        <p>תאריך התחלה: ${new Date(rental.start_date).toLocaleString()}</p>
-                        <p>תאריך סיום: ${new Date(rental.end_date).toLocaleString()}</p>
-                        <p>מחיר: ${rental.total_price} ₪</p>
-                        <p>סטטוס: ${rental.status}</p>
+            </div>
+        </div>
+        <!-- קרטיסיית השכרות פעילות -->
+        <div class="col-md-3">
+            <div class="card stats-card h-100">
+                <div class="israel-stats-border">
+                    <div class="card-body text-center">
+                        <div class="stats-icon mb-3 rentals-icon">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                        <h3 class="stats-number">{{ active_rentals }}</h3>
+                        <p class="stats-label">השכרות פעילות</p>
                     </div>
                 </div>
-            `).join('');
+            </div>
+        </div>
+        <!-- קרטיסיית רכבים זמינים -->
+        <div class="col-md-3">
+            <div class="card stats-card h-100">
+                <div class="israel-stats-border">
+                    <div class="card-body text-center">
+                        <div class="stats-icon mb-3 available-icon">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                        <h3 class="stats-number">{{ available }}</h3>
+                        <p class="stats-label">רכבים זמינים</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* עיצוב המיכל הראשי */
+    .main-container {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        padding: 2rem 1rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* מרווח לאזור הברכה */
+    .welcome-section {
+        margin-bottom: 3rem;
+    }
+
+    /* מיקום שורת הסטטיסטיקות */
+    .stats-row {
+        margin-top: auto;
+        margin-bottom: 2rem;
+    }
+
+    /* הגדרת צבעים */
+    :root {
+        --israel-blue: #0038B8;  /* כחול דגל ישראל */
+        --israel-white: #ffffff;  /* לבן */
+        --israel-light-blue: rgba(0, 56, 184, 0.1);  /* כחול בהיר לרקע */
+        --israel-medium-blue: rgba(0, 56, 184, 0.3);  /* כחול בינוני לקישוטים */
+        --soft-purple: #8B5CF6;  /* סגול רך לאייקונים */
+        --soft-green: #34D399;   /* ירוק רך לאייקונים */
+        --soft-orange: #F59E0B;  /* כתום רך לאייקונים */
+        --soft-blue: var(--israel-blue);  /* כחול רך לאייקונים */
+        --light-purple: rgba(139, 92, 246, 0.15);  /* סגול בהיר לרקע */
+        --light-green: rgba(52, 211, 153, 0.15);   /* ירוק בהיר לרקע */
+        --light-orange: rgba(245, 158, 11, 0.15);  /* כתום בהיר לרקע */
+        --light-blue: var(--israel-light-blue);    /* כחול בהיר לרקע */
+    }
+
+    /* עיצוב כרטיס הברכה */
+    .welcome-card {
+        background: var(--israel-white);
+        color: var(--israel-blue);
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    /* מסגרת בסגנון דגל ישראל */
+    .israel-border {
+        position: relative;
+        background: linear-gradient(135deg, var(--israel-blue) 0%, #002c8f 100%);
+        padding: 3px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 56, 184, 0.2);
+    }
+
+    /* רקע עם דוגמת כוכבים */
+    .star-pattern-bg {
+        background: var(--israel-white);
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* אייקון הברכה */
+    .welcome-icon {
+        font-size: 3.5rem;
+        color: var(--israel-blue);
+        position: relative;
+        display: inline-block;
+        background: var(--israel-light-blue);
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+
+    /* אפקט צל לטקסט */
+    .israel-text-shadow {
+        text-shadow: 2px 2px 4px rgba(0, 56, 184, 0.2);
+        background: linear-gradient(45deg, var(--israel-blue), var(--israel-blue));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    /* קישוטי ברכה */
+    .welcome-decoration {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 2rem;
+    }
+
+    /* קו מעוטר */
+    .star-line {
+        height: 2px;
+        width: 120px;
+        background: linear-gradient(to right, 
+            transparent,
+            var(--israel-medium-blue),
+            var(--israel-blue),
+            var(--israel-medium-blue),
+            transparent
+        );
+    }
+
+    /* אייקון כוכב */
+    .welcome-decoration i {
+        font-size: 1rem;
+        margin: 0 1rem;
+        color: var(--israel-blue);
+    }
+
+    /* מסגרת לכרטיסי סטטיסטיקה */
+    .israel-stats-border {
+        position: relative;
+        background: linear-gradient(135deg, var(--israel-blue) 0%, #002c8f 100%);
+        padding: 2px;
+        border-radius: 12px;
+        height: 100%;
+        transition: transform 0.3s ease;
+    }
+
+    /* אנימציית ריחוף לכרטיסי סטטיסטיקה */
+    .israel-stats-border:hover {
+        transform: translateY(-5px);
+    }
+
+    .israel-stats-border > div {
+        background: var(--israel-white);
+        border-radius: 10px;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stats-icon {
+        font-size: 2.5rem;
+        position: relative;
+        z-index: 1;
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        border-radius: 50%;
+        transition: background-color 0.3s ease;
+    }
+
+    .car-icon {
+        background-color: var(--light-blue);
+    }
+
+    .car-icon i {
+        color: var(--soft-blue);
+    }
+
+    .customers-icon {
+        background-color: var(--light-purple);
+    }
+
+    .customers-icon i {
+        color: var(--soft-purple);
+    }
+
+    .rentals-icon {
+        background-color: var(--light-orange);
+    }
+
+    .rentals-icon i {
+        color: var(--soft-orange);
+    }
+
+    .available-icon {
+        background-color: var(--light-green);
+    }
+
+    .available-icon i {
+        color: var(--soft-green);
+    }
+
+    .stats-number {
+        font-size: 2.2rem;
+        font-weight: bold;
+        background: linear-gradient(45deg, var(--israel-blue), var(--israel-blue));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        margin-bottom: 0.5rem;
+    }
+
+    .stats-label {
+        color: #6c757d;
+        font-size: 1.1rem;
+        margin-bottom: 0;
+    }
+
+    .lead {
+        font-size: 1.4rem;
+        color: var(--israel-blue);
+    }
+
+    @media (max-width: 768px) {
+        .main-container {
+            padding: 1rem;
         }
 
-        // טעינת נתונים ראשונית
-        loadCustomers();
-        loadVehicles();
-        loadRentals();
+        .welcome-card {
+            margin-bottom: 2rem;
+        }
+        
+        .stats-card {
+            margin-bottom: 1rem;
+        }
 
-        // טיפול בטפסים
-        document.getElementById('customerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData.entries());
-            await postData('/api/customers', data);
-            loadCustomers();
-            e.target.reset();
-        });
+        .display-4 {
+            font-size: 2rem;
+        }
 
-        document.getElementById('vehicleForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData.entries());
-            await postData('/api/vehicles', data);
-            loadVehicles();
-            e.target.reset();
-        });
+        .lead {
+            font-size: 1.2rem;
+        }
 
-        document.getElementById('rentalForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData.entries());
-            await postData('/api/rentals', data);
-            loadRentals();
-            e.target.reset();
-        });
-    </script>
-</body>
-</html> 
+        .star-line {
+            width: 80px;
+        }
+    }
+</style>
+{% endblock %} 

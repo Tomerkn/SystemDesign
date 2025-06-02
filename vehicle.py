@@ -1,33 +1,27 @@
 import sqlite3
-# ייבוא ספריית בסיס הנתונים
-from datetime import datetime, timedelta
-# ייבוא ספריות לעבודה עם תאריכים
+# מייבא את הספריות שאנחנו צריכים
 from vehicle_monitoring import DrivingData, MaintenanceAlert
 # ייבוא מחלקות ניטור רכב והתראות תחזוקה
 
+# איפה נמצא בסיס הנתונים שלנו
 DB_PATH = "rental_system.db"
-# הגדרת נתיב לקובץ בסיס הנתונים
 
 
 class Vehicle:
-    # מחלקה המייצגת רכב במערכת
+    # כל רכב במערכת מיוצג על ידי המחלקה הזו
     def __init__(self, license_plate, brand=None, model=None):
-        # אתחול אובייקט רכב חדש
-        self.license_plate = license_plate
-        # מספר רישוי
-        self.brand = brand
-        # יצרן הרכב
-        self.model = model
-        # דגם הרכב
-        self.status = 'available'
-        # סטטוס הרכב - זמין כברירת מחדל
+        # כשיוצרים רכב חדש, צריך לפחות את מספר הרישוי שלו
+        self.license_plate = license_plate  # מספר הרישוי
+        self.brand = brand                  # איזה יצרן (טויוטה, הונדה וכו')
+        self.model = model                  # איזה דגם ספציפי
+        self.status = 'available'           # האם הרכב פנוי להשכרה
         
-        # טעינת נתוני רכב מבסיס הנתונים אם לא סופקו
+        # אם לא נתנו לנו את כל הפרטים, ננסה למצוא אותם בבסיס הנתונים
         if brand is None or model is None:
             self._load_from_db()
 
     def _load_from_db(self):
-        # טעינת נתוני רכב מבסיס הנתונים
+        # מנסה למצוא את פרטי הרכב בבסיס הנתונים
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
         c.execute("""
@@ -45,9 +39,9 @@ class Vehicle:
         conn.close()
 
     def update_status(self, new_status):
-        # עדכון סטטוס הרכב
+        # משנה את המצב של הרכב (פנוי, מושכר, בטיפול)
         if new_status not in ['available', 'rented', 'maintenance']:
-            raise ValueError("Invalid status")
+            raise ValueError("סטטוס לא חוקי")
             
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
@@ -62,19 +56,20 @@ class Vehicle:
         self.status = new_status
 
     def schedule_maintenance(self, maintenance_type, days_until_due=30):
-        # תזמון טיפול לרכב
+        # קובע תור לטיפול ברכב
+        # אפשר לקבוע טיפול למועד עתידי או לטיפול מיידי
         alert = MaintenanceAlert(self.license_plate)
         alert.generate_alert(maintenance_type, days_until_due)
         
-        # עדכון סטטוס הרכב לתחזוקה אם הטיפול מיידי
+        # אם זה טיפול דחוף, הרכב עובר למצב "בטיפול" מיד
         if days_until_due == 0:
             self.update_status('maintenance')
         
-        # שליחת התראה למנהל
+        # שולח הודעה למנהל על הטיפול המתוכנן
         alert.notify_manager()
 
     def get_driving_data(self):
-        # קבלת היסטוריית נתוני נהיגה של הרכב
+        # מביא את כל הנתונים על איך נהגו ברכב לאחרונה
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
         c.execute("""
@@ -89,17 +84,18 @@ class Vehicle:
         return data
 
     def get_maintenance_alerts(self):
-        # קבלת רשימת התראות תחזוקה לרכב
+        # מביא את כל ההתראות על טיפולים שצריך לעשות לרכב
         return MaintenanceAlert.get_pending_alerts(self.license_plate)
 
     def record_driving_data(self, avg_speed, harsh_brakes):
-        # תיעוד נתוני נהיגה חדשים
+        # שומר מידע חדש על נסיעה שנעשתה ברכב
         data = DrivingData(self.license_plate)
         data.avg_speed = avg_speed
         data.harsh_brakes = harsh_brakes
         data.save()
         
-        # חישוב ציון נהיגה ותזמון טיפול במידת הצורך
+        # בודק אם הנהיגה הייתה בעייתית ואולי צריך לבדוק את הרכב
         score = data.calculate_score()
-        if score < 60:  # אם ציון הנהיגה נמוך, תזמון בדיקת רכב
-            self.schedule_maintenance("בדיקת ציון נהיגה נמוך", 7) 
+        if score < 60:  # אם הציון נמוך מדי
+            # קובע בדיקה תוך שבוע
+            self.schedule_maintenance("בדיקה בגלל נהיגה בעייתית", 7) 

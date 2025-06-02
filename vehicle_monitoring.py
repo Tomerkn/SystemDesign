@@ -1,42 +1,36 @@
+# הספריות שאנחנו צריכים בשביל לעקוב אחרי הרכבים
 import sqlite3
-# ייבוא ספריית בסיס הנתונים
 from datetime import datetime, timedelta
-# ייבוא ספריות לעבודה עם תאריכים
 
+# איפה שומרים את כל המידע
 DB_PATH = "rental_system.db"
-# הגדרת נתיב לקובץ בסיס הנתונים
 
 
 class DrivingData:
-    # מחלקה לניהול נתוני נהיגה של רכב
+    # עוקב אחרי איך נוהגים ברכב - מהירות, בלימות וכו'
     def __init__(self, vehicle_id):
-        # אתחול אובייקט נתוני נהיגה
-        self.vehicle_id = vehicle_id
-        # מספר רישוי הרכב
-        self.date = datetime.now()
-        # תאריך הנסיעה
-        self.avg_speed = 0.0
-        # מהירות ממוצעת
-        self.harsh_brakes = 0
-        # מספר בלימות חדות
+        # כשמתחילים לעקוב אחרי רכב חדש
+        self.vehicle_id = vehicle_id      # איזה רכב זה
+        self.date = datetime.now()        # מתי הנסיעה התחילה
+        self.avg_speed = 0.0              # כמה מהר נסעו בממוצע
+        self.harsh_brakes = 0             # כמה פעמים בלמו חזק מדי
 
     def calculate_score(self):
-        # חישוב ציון נהיגה על בסיס המדדים
-        score = 100
-        # ציון התחלתי מקסימלי
+        # נותן ציון לנהיגה - 100 זה מושלם, 0 זה ממש גרוע
+        score = 100  # מתחילים מציון מושלם
         
-        # הורדת נקודות על מהירות גבוהה (מעל 100 קמ"ש)
+        # מורידים נקודות אם נסעו מהר מדי (מעל 100 קמ"ש)
         if self.avg_speed > 100:
             score -= (self.avg_speed - 100) * 0.5
         
-        # הורדת נקודות על בלימות חדות
+        # מורידים נקודות על כל בלימת חירום
         score -= self.harsh_brakes * 5
         
-        # החזרת ציון בטווח 0-100
+        # מחזירים ציון בין 0 ל-100
         return max(0, min(100, score))
 
     def save(self):
-        # שמירת נתוני הנהיגה בבסיס הנתונים
+        # שומר את כל הנתונים על הנסיעה בבסיס הנתונים
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
         c.execute("""
@@ -49,20 +43,16 @@ class DrivingData:
 
 
 class MaintenanceAlert:
-    # מחלקה לניהול התראות תחזוקה
+    # מטפל בכל ההתראות על טיפולים שצריך לעשות לרכבים
     def __init__(self, vehicle_id):
-        # אתחול אובייקט התראת תחזוקה
-        self.vehicle_id = vehicle_id
-        # מספר רישוי הרכב
-        self.alert_id = None
-        # מזהה ההתראה
-        self.due_date = None
-        # תאריך יעד לטיפול
-        self.type = None
-        # סוג הטיפול הנדרש
+        # כשיוצרים התראה חדשה על טיפול
+        self.vehicle_id = vehicle_id      # לאיזה רכב צריך לעשות את הטיפול
+        self.alert_id = None              # מספר מזהה להתראה
+        self.due_date = None              # עד מתי צריך לעשות את הטיפול
+        self.type = None                  # איזה סוג של טיפול צריך
 
     def generate_alert(self, alert_type, days_until_due=30):
-        # יצירת התראת תחזוקה חדשה
+        # יוצר התראה חדשה על טיפול שצריך לעשות
         self.type = alert_type
         self.due_date = datetime.now() + timedelta(days=days_until_due)
         
@@ -78,20 +68,20 @@ class MaintenanceAlert:
         conn.close()
 
     def notify_manager(self):
-        # שליחת התראה למנהל המערכת
-        # במערכת אמיתית, כאן תהיה שליחת מייל או התראה
+        # שולח הודעה למנהל על טיפול שצריך לעשות
+        # בעתיד נוסיף פה שליחת מייל או הודעה בטלפון
         print(f"התראת תחזוקה: רכב {self.vehicle_id}")
         print(f"סוג טיפול: {self.type}")
         print(f"תאריך יעד: {self.due_date.strftime('%Y-%m-%d')}")
 
     @staticmethod
     def get_pending_alerts(vehicle_id=None):
-        # קבלת רשימת התראות תחזוקה פתוחות
+        # מביא את כל הטיפולים שעוד לא נעשו
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
         
         if vehicle_id:
-            # קבלת התראות לרכב ספציפי
+            # אם ביקשו טיפולים של רכב ספציפי
             c.execute("""
                 SELECT alertId, vehicleId, dueDate, type 
                 FROM MaintenanceAlert 
@@ -99,7 +89,7 @@ class MaintenanceAlert:
                 ORDER BY dueDate
             """, (vehicle_id,))
         else:
-            # קבלת כל ההתראות במערכת
+            # אם רוצים לראות את כל הטיפולים של כל הרכבים
             c.execute("""
                 SELECT alertId, vehicleId, dueDate, type 
                 FROM MaintenanceAlert 

@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<!-- תבנית הבסיס של האתר - כל הדפים משתמשים בה -->
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>גלגל עומר בע״מ - מערכת השכרת רכב</title>
+    <!-- קישור לספריות עיצוב -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        /* הגדרות צבעים וסגנונות בסיסיים */
+        :root {
+            --israel-blue: #0038B8;  /* הצבע הכחול של דגל ישראל */
+        }
+
+        /* עיצוב בסיסי של הדף */
+        body {
+            min-height: 100vh;
+            background-color: #f8f9fa;
+        }
+
+        /* עיצוב קישורים */
+        a {
+            color: var(--israel-blue);
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #002c8f;  /* כחול כהה יותר כשעוברים עם העכבר */
+        }
+
+        /* הגדרות צבע כחול ישראל לאלמנטים שונים */
+        .text-primary {
+            color: var(--israel-blue) !important;
+        }
+
+        .bg-primary {
+            background-color: var(--israel-blue) !important;
+        }
+
+        /* עיצוב כפתורים */
+        .btn-primary {
+            background-color: var(--israel-blue);
+            border-color: var(--israel-blue);
+        }
+
+        .btn-primary:hover {
+            background-color: #002c8f;
+            border-color: #002c8f;
+        }
+
+        .btn-outline-primary {
+            color: var(--israel-blue);
+            border-color: var(--israel-blue);
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--israel-blue);
+            border-color: var(--israel-blue);
+        }
+
+        .link-primary {
+            color: var(--israel-blue) !important;
+        }
+
+        .link-primary:hover {
+            color: #002c8f !important;
+        }
+
+        /* תפריט צד שנפתח בהובר */
+        .sidebar {
+            width: 60px;  /* רוחב התפריט כשהוא סגור */
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            right: 0;
+            background: var(--israel-blue);
+            transition: width 0.3s ease;
+            overflow: hidden;
+            z-index: 1000;
+        }
+
+        .sidebar:hover {
+            width: 250px;  /* רוחב התפריט כשהוא פתוח */
+        }
+
+        /* דגל ישראל בתפריט */
+        .israel-flag {
+            position: relative;
+            width: 20px;
+            height: 14px;
+            margin: 20px auto;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar:hover .israel-flag {
+            width: 80px;
+            height: 56px;
+            margin: 30px auto;
+        }
+
+        /* הפסים של דגל ישראל */
+        .flag-stripe-top, .flag-stripe-bottom {
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.9);
+            left: 0;
+        }
+
+        .flag-stripe-top {
+            top: 0;
+        }
+
+        .flag-stripe-bottom {
+            bottom: 0;
+        }
+
+        /* מגן דוד */
+        .star-of-david {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+        }
+
+        .sidebar:hover .star-of-david {
+            width: 32px;
+            height: 32px;
+        }
+
+        .star-of-david svg {
+            width: 100%;
+            height: 100%;
+            stroke: rgba(255, 255, 255, 0.9);
+            stroke-width: 1;
+            fill: none;
+        }
+
+        /* המשולשים שיוצרים את מגן דוד */
+        .star-triangle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .star-triangle:before,
+        .star-triangle:after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.9);
+            top: 50%;
+            left: 0;
+        }
+
+        .star-triangle:before {
+            transform-origin: left;
+            transform: rotate(-60deg);
+        }
+
+        .star-triangle:after {
+            transform-origin: right;
+            transform: rotate(60deg);
+        }
+
+        .star-triangle-inverted {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .star-triangle-inverted:before,
+        .star-triangle-inverted:after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.9);
+            top: 50%;
+            left: 0;
+        }
+
+        .star-triangle-inverted:before {
+            transform-origin: left;
+            transform: rotate(120deg);
+        }
+
+        .star-triangle-inverted:after {
+            transform-origin: right;
+            transform: rotate(-120deg);
+        }
+
+        .star-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.9);
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+        }
+
+        /* עיצוב קישורי התפריט */
+        .nav-link {
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .nav-link i {
+            width: 30px;
+            text-align: center;
+            font-size: 1.2rem;
+            margin-left: 15px;
+        }
+
+        .nav-link span {
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar:hover .nav-link span {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .nav-link:hover {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .logo-section {
+            padding: 15px;
+            color: white;
+            white-space: nowrap;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-section i {
+            width: 30px;
+            font-size: 1.2rem;
+            text-align: center;
+            margin-left: 15px;
+        }
+
+        .logo-section span {
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar:hover .logo-section span {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .main-content {
+            margin-right: 60px;
+            padding: 20px;
+            transition: margin-right 0.3s ease;
+        }
+
+        .sidebar:hover + .main-content {
+            margin-right: 250px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 60px;
+            }
+            .main-content {
+                margin-right: 60px;
+            }
+            .sidebar:hover + .main-content {
+                margin-right: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="israel-flag">
+            <div class="flag-stripe-top"></div>
+            <div class="flag-stripe-bottom"></div>
+            <svg viewBox="0 0 100 100" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: 60%;">
+                <path d="M50 10 L85 70 L15 70 Z M50 90 L15 30 L85 30 Z" 
+                      fill="none" 
+                      stroke="rgba(255, 255, 255, 0.9)" 
+                      stroke-width="1"
+                      stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <nav>
+            <div class="d-flex flex-column h-100">
+                <div class="logo-section">
+                    <i class="bi bi-car-front"></i>
+                    <span>גלגל עומר בע״מ</span>
+                </div>
+                <div class="mt-2">
+                    <a href="{{ url_for('index') }}" class="nav-link {{ 'active' if request.endpoint == 'index' }}">
+                        <i class="bi bi-house-door"></i>
+                        <span>דף הבית</span>
+                    </a>
+                    <a href="{{ url_for('customers') }}" class="nav-link {{ 'active' if request.endpoint == 'customers' }}">
+                        <i class="bi bi-people"></i>
+                        <span>לקוחות</span>
+                    </a>
+                    <a href="{{ url_for('vehicles') }}" class="nav-link {{ 'active' if request.endpoint == 'vehicles' }}">
+                        <i class="bi bi-car-front"></i>
+                        <span>רכבים</span>
+                    </a>
+                    <a href="{{ url_for('rentals') }}" class="nav-link {{ 'active' if request.endpoint == 'rentals' }}">
+                        <i class="bi bi-calendar-check"></i>
+                        <span>השכרות</span>
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="container-fluid">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html> 

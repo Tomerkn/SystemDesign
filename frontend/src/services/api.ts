@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5001/api';
+// כתובת בסיס ל-API
+const API_URL = 'http://localhost:5000/api';
 
+// יצירת מופע axios עם הגדרות בסיסיות
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -9,43 +11,46 @@ const api = axios.create({
   },
 });
 
+// ממשק עבור לקוח
 export interface Customer {
-  id: string;
-  name: string;
-  phone: string;
-  email: string;
+  id: string;      // מזהה ייחודי
+  name: string;    // שם מלא
+  phone: string;   // מספר טלפון
+  email: string;   // כתובת אימייל
 }
 
+// ממשק עבור רכב
 export interface Vehicle {
-  licensePlate: string;
-  brand: string;
-  model: string;
-  status: 'available' | 'rented' | 'maintenance';
+  licensePlate: string;  // מספר רישוי
+  brand: string;         // יצרן
+  model: string;         // דגם
+  status: 'available' | 'rented' | 'maintenance';  // סטטוס: זמין, מושכר, בתחזוקה
 }
 
+// ממשק עבור השכרה
 export interface Rental {
-  id: string;
-  customer_id: string;
-  vehicle_id: string;
-  start_date: string; // ISO string
-  end_date: string;   // ISO string
-  total_price: number;
-  status: 'active' | 'completed' | 'cancelled';
+  id: string;           // מזהה ייחודי
+  customer_id: string;  // מזהה הלקוח
+  vehicle_id: string;   // מזהה הרכב
+  start_date: string;   // תאריך התחלה (מחרוזת ISO)
+  end_date: string;     // תאריך סיום (מחרוזת ISO)
+  total_price: number;  // מחיר כולל
+  status: 'active' | 'completed' | 'cancelled';  // סטטוס: פעיל, הושלם, בוטל
 }
 
-// Customer API calls
-export const getCustomers = () => api.get<Customer[]>('/customers');
-export const createCustomer = (customer: Omit<Customer, 'id'>) =>
+// קריאות API ללקוחות
+export const getCustomers = () => api.get<Customer[]>('/customers');  // קבלת כל הלקוחות
+export const createCustomer = (customer: Omit<Customer, 'id'>) =>     // יצירת לקוח חדש
   api.post<Customer>('/customers', customer);
 
-// Vehicle API calls
-export const getVehicles = () => api.get<Vehicle[]>('/vehicles');
-export const createVehicle = (vehicle: Omit<Vehicle, 'id'>) =>
+// קריאות API לרכבים
+export const getVehicles = () => api.get<Vehicle[]>('/vehicles');    // קבלת כל הרכבים
+export const createVehicle = (vehicle: Omit<Vehicle, 'id'>) =>       // יצירת רכב חדש
   api.post<Vehicle>('/vehicles', vehicle);
 
-// Rental API calls
-export const getRentals = () => api.get<Rental[]>('/rentals');
-export const createRental = (rental: Omit<Rental, 'id'>) =>
+// קריאות API להשכרות
+export const getRentals = () => api.get<Rental[]>('/rentals');       // קבלת כל ההשכרות
+export const createRental = (rental: Omit<Rental, 'id'>) =>          // יצירת השכרה חדשה
   api.post<Rental>('/rentals', rental);
 
 export default api; 
