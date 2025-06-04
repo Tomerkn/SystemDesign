@@ -19,23 +19,23 @@
 
 ## התקנה
 
-1. התקן את הדרישות:
+1. התקנה של דרישות המערכת:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. הפעל את השרת:
+2. להדליק את השרת:
 ```bash
 python app.py
 ```
 
-3. התקן את הדרישות של ה-Frontend:
+3. התקנה של  הדרישות של ה-Frontend:
 ```bash
 cd frontend
 npm install
 ```
 
-4. הפעל את ה-Frontend:
+4. הפעלה של  ה-Frontend:
 ```bash
 npm start
 ```
@@ -58,16 +58,12 @@ npm start
 
 ## שימוש
 
-1. פתח את הדפדפן בכתובת `http://localhost:3000`
-2. התחבר למערכת
-3. השתמש בתפריט הצד כדי לנווט בין הדפים השונים
+1. לפתוח את הדפדפו ולהקפיד על הפורט `http://localhost:3000`
+2. התחברות למערכת
+3. להשתמש ב sideBar כדי לעבור בין תפריטים
 
 ## פיתוח
 
 - ה-Frontend מפותח ב-React ומשתמש ב-React Router לניתוב
 - ה-Backend מפותח ב-Flask ומשתמש ב-SQLAlchemy לניהול בסיס הנתונים
 - התקשורת בין ה-Frontend ל-Backend מתבצעת באמצעות REST API
-
-## רישיון
-
-MIT 
