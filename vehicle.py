@@ -1,3 +1,4 @@
+# Version 1.1 - Firmware Update
 import sqlite3
 # מייבא את הספריות שאנחנו צריכים
 from vehicle_monitoring import DrivingData, MaintenanceAlert

@@ -1,3 +1,4 @@
+# Version 1.1 - Firmware Update
 # מייבא את כל הספריות שאנחנו צריכים בשביל האפליקציה
 from flask import (
     Flask, render_template, request, redirect,

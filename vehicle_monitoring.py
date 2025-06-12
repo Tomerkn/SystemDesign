@@ -1,3 +1,4 @@
+# Version 1.1 - Firmware Update
 # הספריות שאנחנו צריכים בשביל לעקוב אחרי הרכבים
 import sqlite3
 from datetime import datetime, timedelta
