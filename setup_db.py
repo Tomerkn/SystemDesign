@@ -18,16 +18,24 @@ CREATE TABLE IF NOT EXISTS SystemUser (
 )
 ''')  # סוגר את הפקודה
 
-# עכשיו נוסיף משתמש ברירת מחדל למערכת: שם משתמש admin, סיסמה admin, תפקיד מנהל
+# עכשיו נוסיף שני משתמשים ברירת מחדל: admin ו-user
 try:
     c.execute(
-        "INSERT INTO SystemUser (username, password, role) VALUES (?, ?, ?)",  # פקודת SQL להוספת משתמש
-        ("admin", "admin", "מנהל")  # הערכים שנכניס: שם משתמש, סיסמה, תפקיד
+        "INSERT INTO SystemUser (username, password, role) VALUES (?, ?, ?)",
+        ("admin", "admin", "מנהל")
     )
-    print("משתמש admin נוסף!")  # מדפיס הודעה אם הצליח להוסיף
+    print("משתמש admin נוסף!")
 except sqlite3.IntegrityError:
-    # אם המשתמש כבר קיים, תופסים את השגיאה ומדפיסים הודעה מתאימה
     print("המשתמש admin כבר קיים.")
+
+try:
+    c.execute(
+        "INSERT INTO SystemUser (username, password, role) VALUES (?, ?, ?)",
+        ("user", "user", "משתמש")
+    )
+    print("משתמש user נוסף!")
+except sqlite3.IntegrityError:
+    print("המשתמש user כבר קיים.")
 
 conn.commit()  # שומרים את כל השינויים שביצענו בבסיס הנתונים
 conn.close()  # סוגרים את החיבור לבסיס הנתונים (חשוב כדי לשחרר משאבים) 

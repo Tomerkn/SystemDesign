@@ -30,11 +30,11 @@ export interface Vehicle {
 // ממשק עבור השכרה
 export interface Rental {
   id: string;           // מזהה ייחודי
-  customer_id: string;  // מזהה הלקוח
-  vehicle_id: string;   // מזהה הרכב
-  start_date: string;   // תאריך התחלה (מחרוזת ISO)
-  end_date: string;     // תאריך סיום (מחרוזת ISO)
-  total_price: number;  // מחיר כולל
+  customerId: string;  // מזהה הלקוח
+  vehicleId: string;   // מזהה הרכב
+  startDate: string;   // תאריך התחלה (מחרוזת ISO)
+  endDate: string;     // תאריך סיום (מחרוזת ISO)
+  totalPrice: number;  // מחיר כולל
   status: 'active' | 'completed' | 'cancelled';  // סטטוס: פעיל, הושלם, בוטל
 }
 
@@ -45,7 +45,7 @@ export const createCustomer = (customer: Omit<Customer, 'id'>) =>     // יצי�
 
 // קריאות API לרכבים
 export const getVehicles = () => api.get<Vehicle[]>('/vehicles');    // קבלת כל הרכבים
-export const createVehicle = (vehicle: Omit<Vehicle, 'id'>) =>       // יצירת רכב חדש
+export const createVehicle = (vehicle: Omit<Vehicle, 'licensePlate'>) =>       // יצירת רכב חדש
   api.post<Vehicle>('/vehicles', vehicle);
 
 // קריאות API להשכרות

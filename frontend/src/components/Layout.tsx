@@ -1,16 +1,23 @@
 // ייבוא ספריות וקומפוננטות
 import React from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Container, Box, Button } from '@mui/material';
 
 // קומפוננטת תבנית הבסיס של האפליקציה
 const Layout: React.FC = () => {
   // מקבל את המיקום הנוכחי בניתוב
   const location = useLocation();
+  const navigate = useNavigate();
 
   // פונקציה לבדיקה האם הכפתור פעיל (מסלול נוכחי)
   const isActive = (path: string) => {
     return location.pathname === path;
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('username');
+    navigate('/login');
   };
 
   return (
@@ -78,6 +85,9 @@ const Layout: React.FC = () => {
             }}
           >
             השכרות
+          </Button>
+          <Button color="inherit" onClick={handleLogout} sx={{ ml: 2 }}>
+            התנתק
           </Button>
         </Toolbar>
       </AppBar>

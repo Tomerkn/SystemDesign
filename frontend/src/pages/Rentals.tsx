@@ -35,11 +35,11 @@ const Rentals: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [newRental, setNewRental] = useState<Omit<Rental, 'id'>>({
-    customer_id: '',
-    vehicle_id: '',
-    start_date: new Date().toISOString(),
-    end_date: new Date().toISOString(),
-    total_price: 0,
+    customerId: '',
+    vehicleId: '',
+    startDate: new Date().toISOString(),
+    endDate: new Date().toISOString(),
+    totalPrice: 0,
     status: 'active',
   });
 
@@ -68,11 +68,11 @@ const Rentals: React.FC = () => {
   const handleClose = () => {
     setOpen(false);
     setNewRental({
-      customer_id: '',
-      vehicle_id: '',
-      start_date: new Date().toISOString(),
-      end_date: new Date().toISOString(),
-      total_price: 0,
+      customerId: '',
+      vehicleId: '',
+      startDate: new Date().toISOString(),
+      endDate: new Date().toISOString(),
+      totalPrice: 0,
       status: 'active',
     });
   };
@@ -101,6 +101,14 @@ const Rentals: React.FC = () => {
         return status;
     }
   };
+
+  console.log('rentals:', rentals);
+  if (rentals && rentals.length > 0) {
+    rentals.forEach((r, i) => {
+      console.log(`rental[${i}]`, r);
+      console.log('id:', r.id, 'customerId:', r.customerId, 'vehicleId:', r.vehicleId, 'startDate:', r.startDate, 'endDate:', r.endDate, 'totalPrice:', r.totalPrice, 'status:', r.status);
+    });
+  }
 
   return (
     <Box>
@@ -144,15 +152,15 @@ const Rentals: React.FC = () => {
             {rentals.map((rental) => (
               <TableRow key={rental.id}>
                 <TableCell>{rental.id}</TableCell>
-                <TableCell>{rental.customer_id}</TableCell>
-                <TableCell>{rental.vehicle_id}</TableCell>
+                <TableCell>{rental.customerId}</TableCell>
+                <TableCell>{rental.vehicleId}</TableCell>
                 <TableCell>
-                  {new Date(rental.start_date).toLocaleDateString('he-IL')}
+                  {new Date(rental.startDate).toLocaleDateString('he-IL')}
                 </TableCell>
                 <TableCell>
-                  {new Date(rental.end_date).toLocaleDateString('he-IL')}
+                  {new Date(rental.endDate).toLocaleDateString('he-IL')}
                 </TableCell>
-                <TableCell>₪{rental.total_price}</TableCell>
+                <TableCell>₪{rental.totalPrice}</TableCell>
                 <TableCell>{getStatusText(rental.status)}</TableCell>
               </TableRow>
             ))}
@@ -168,34 +176,34 @@ const Rentals: React.FC = () => {
             margin="dense"
             label="מזהה לקוח"
             fullWidth
-            value={newRental.customer_id}
+            value={newRental.customerId}
             onChange={(e) =>
-              setNewRental({ ...newRental, customer_id: e.target.value })
+              setNewRental({ ...newRental, customerId: e.target.value })
             }
           />
           <TextField
             margin="dense"
             label="מזהה רכב"
             fullWidth
-            value={newRental.vehicle_id}
+            value={newRental.vehicleId}
             onChange={(e) =>
-              setNewRental({ ...newRental, vehicle_id: e.target.value })
+              setNewRental({ ...newRental, vehicleId: e.target.value })
             }
           />
           <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={he}>
             <DatePicker
               label="תאריך התחלה"
-              value={new Date(newRental.start_date)}
+              value={new Date(newRental.startDate)}
               onChange={(date: Date | null) =>
-                setNewRental({ ...newRental, start_date: date ? date.toISOString() : new Date().toISOString() })
+                setNewRental({ ...newRental, startDate: date ? date.toISOString() : new Date().toISOString() })
               }
               sx={{ width: '100%', mt: 2 }}
             />
             <DatePicker
               label="תאריך סיום"
-              value={new Date(newRental.end_date)}
+              value={new Date(newRental.endDate)}
               onChange={(date: Date | null) =>
-                setNewRental({ ...newRental, end_date: date ? date.toISOString() : new Date().toISOString() })
+                setNewRental({ ...newRental, endDate: date ? date.toISOString() : new Date().toISOString() })
               }
               sx={{ width: '100%', mt: 2 }}
             />
@@ -205,12 +213,9 @@ const Rentals: React.FC = () => {
             label="מחיר כולל"
             type="number"
             fullWidth
-            value={newRental.total_price}
+            value={newRental.totalPrice}
             onChange={(e) =>
-              setNewRental({
-                ...newRental,
-                total_price: parseFloat(e.target.value) || 0,
-              })
+              setNewRental({ ...newRental, totalPrice: parseFloat(e.target.value) || 0 })
             }
           />
           <FormControl fullWidth margin="dense">
