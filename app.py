@@ -1,10 +1,15 @@
 from flask import (
     Flask, render_template, request, redirect,
-    url_for, flash, jsonify
+    url_for, flash, jsonify, session
 )
 from flask_sqlalchemy import SQLAlchemy
 from datetime import date
 import sqlite3
+import os  # בשביל לבדוק קבצים ולהריץ פקודות
+import sys  # בשביל להריץ פקודות מערכת
+import subprocess  # בשביל להריץ pip install
+import webbrowser  # בשביל לפתוח דפדפן
+import time
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -65,6 +70,10 @@ def get_rentals():
 
 @app.route('/')
 def index():
+    print('index route called, session:', dict(session))  # debug
+    if 'username' not in session:
+        print('no username in session, redirecting to login')  # debug
+        return redirect(url_for('login'))
     # דף הבית - מציג סטטיסטיקות כלליות על המערכת
     cars, customers, active_rentals, available = get_stats()
     return render_template(
@@ -349,5 +358,55 @@ def get_customer_by_id(customer_id):
     finally:
         conn.close()
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        conn = sqlite3.connect("rental_system.db")
+        c = conn.cursor()
+        c.execute("SELECT role FROM SystemUser WHERE username=? AND password=?", (username, password))
+        result = c.fetchone()
+        conn.close()
+        if result:
+            session['username'] = username
+            session['role'] = result[0]
+            flash('התחברת בהצלחה', 'success')
+            return redirect(url_for('index'))
+        else:
+            flash('שם משתמש או סיסמה שגויים', 'error')
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('התנתקת מהמערכת', 'success')
+    return redirect(url_for('login'))
+
+def open_browser():
+    time.sleep(2)
+    print('פותח דפדפן לכתובת http://127.0.0.1:5000 ...')
+    webbrowser.open('http://127.0.0.1:5000')
+
 if __name__ == '__main__':
+    # --- בדיקה והתקנת requirements.txt אם צריך ---
+    if os.path.exists('requirements.txt'):
+        try:
+            import pkg_resources
+            with open('requirements.txt') as f:
+                required = [line.strip() for line in f if line.strip() and not line.strip().startswith('#')]
+            installed = {pkg.key for pkg in pkg_resources.working_set}
+            missing = [r for r in required if r and r.split('==')[0].lower() not in installed]
+            if missing:
+                print('מוריד תלויות חסרות:', missing)
+                subprocess.check_call([sys.executable, '-m', 'pip', 'install'] + missing)
+        except Exception as e:
+            print('שגיאה בהתקנת חבילות:', e)
+            sys.exit(1)
+    else:
+        print('לא נמצא requirements.txt, מדלג על התקנת חבילות...')
+
+    # --- פתיחת דפדפן אוטומטית ב-thread נפרד ---
+    import threading
+    threading.Thread(target=open_browser).start()
     app.run(port=5000, debug=True) 
