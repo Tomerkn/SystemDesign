@@ -1,476 +1,413 @@
 # Version 1.1 - Firmware Update
-# ------------------------------------------------------
-# ייבוא הספריות הנדרשות
-# ------------------------------------------------------
 from flask import (
-    Flask, request, jsonify, render_template, redirect, url_for, session  # ייבוא רכיבי Flask: אפליקציה, בקשות, JSON, תבניות, הפניות, session
+    Flask, render_template, request, redirect,
+    url_for, flash, jsonify, session
 )
-from flask_cors import CORS  # ייבוא ספריית CORS לאפשר גישה מדומיינים שונים
-from flask_sqlalchemy import SQLAlchemy  # ייבוא ספריית ORM לעבודה עם בסיס הנתונים
-from datetime import datetime  # ייבוא ספריית תאריכים
-import sqlite3  # ייבוא ספריית בסיס הנתונים SQLite
+from flask_sqlalchemy import SQLAlchemy
+from datetime import date
+import sqlite3
+import os  # בשביל לבדוק קבצים ולהריץ פקודות
+import sys  # בשביל להריץ פקודות מערכת
+import subprocess  # בשביל להריץ pip install
+import webbrowser  # בשביל לפתוח דפדפן
+import time
 
-# ------------------------------------------------------
-# יצירת אפליקציית Flask והגדרות ראשוניות
-# ------------------------------------------------------
 app = Flask(__name__)
-# הגדרת CORS לאפשר גישה מכל דומיין (לצורך עבודה עם פרונטנד נפרד)
-CORS(app, resources={r"/*": {"origins": "*"}})
-
-# ------------------------------------------------------
-# נתיב בדיקה פשוט לוודא שהשרת עובד
-# ------------------------------------------------------
-@app.route('/')
-def test():
-    # מחזיר טקסט פשוט כדי לבדוק שהשרת פועל
-    return "השרת עובד!"
-
-# ------------------------------------------------------
-# הגדרות חיבור לבסיס הנתונים
-# ------------------------------------------------------
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///rental_system.db'  # נתיב לקובץ בסיס הנתונים
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # ביטול מעקב אחר שינויים לשיפור ביצועים
-# יצירת אובייקט בסיס הנתונים
-# (מאפשר עבודה עם ORM של SQLAlchemy)
+app.config['SECRET_KEY'] = 'your-secret-key-here'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///rental_system.db'
 db = SQLAlchemy(app)
 
-# ------------------------------------------------------
-# הגדרת מודלים (טבלאות) של בסיס הנתונים
-# ------------------------------------------------------
-class Customer(db.Model):
-    # טבלת לקוחות
-    id = db.Column(db.String(9), primary_key=True)  # מספר ת.ז כמפתח ראשי
-    name = db.Column(db.String(100), nullable=False)  # שם מלא - שדה חובה
-    phone = db.Column(db.String(20), nullable=False)  # מספר טלפון - שדה חובה
-    email = db.Column(db.String(100), nullable=False)  # כתובת אימייל - שדה חובה
-    rentals = db.relationship('Rental', backref='customer', lazy=True)  # קשר להשכרות של הלקוח
+# פונקציות לעבודה עם בסיס הנתונים
 
-class Vehicle(db.Model):
-    # טבלת רכבים
-    license_plate = db.Column(db.String(20), primary_key=True)  # מספר רישוי כמפתח ראשי
-    brand = db.Column(db.String(50), nullable=False)  # יצרן הרכב - שדה חובה
-    model = db.Column(db.String(50), nullable=False)  # דגם הרכב - שדה חובה
-    year = db.Column(db.Integer)  # שנת ייצור
-    status = db.Column(db.String(20), default='available')  # סטטוס הרכב - ברירת מחדל: זמין
-    rentals = db.relationship('Rental', backref='vehicle', lazy=True)  # קשר להשכרות של הרכב
+def get_stats():
+    # מביא את כל הנתונים הכלליים של המערכת - כמה רכבים יש, כמה לקוחות, וכו'
+    conn = sqlite3.connect("rental_system.db")
+    c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM Vehicle")
+    cars = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM Customer")
+    customers = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM Rental WHERE endDate >= date('now')")
+    active_rentals = c.fetchone()[0]
+    c.execute("SELECT COUNT(*) FROM Vehicle WHERE status = 'available'")
+    available = c.fetchone()[0]
+    conn.close()
+    return cars, customers, active_rentals, available
 
-class Rental(db.Model):
-    # טבלת השכרות
-    id = db.Column(db.Integer, primary_key=True)  # מזהה ייחודי להשכרה
-    customer_id = db.Column(db.String(9), db.ForeignKey('customer.id'), nullable=False)  # מפתח זר ללקוח
-    vehicle_id = db.Column(db.String(20), db.ForeignKey('vehicle.license_plate'), nullable=False)  # מפתח זר לרכב
-    start_date = db.Column(db.DateTime, nullable=False)  # תאריך התחלת ההשכרה
-    end_date = db.Column(db.DateTime, nullable=False)  # תאריך סיום ההשכרה
-    total_price = db.Column(db.Float)  # מחיר כולל להשכרה
-    status = db.Column(db.String(20), default='active')  # סטטוס ההשכרה - ברירת מחדל: פעיל
-
-class MaintenanceAlert(db.Model):
-    # טבלת התראות תחזוקה
-    id = db.Column(db.Integer, primary_key=True)  # מזהה ייחודי להתראה
-    vehicle_id = db.Column(db.String(20), db.ForeignKey('vehicle.license_plate'), nullable=False)  # מפתח זר לרכב
-    due_date = db.Column(db.DateTime, nullable=False)  # תאריך יעד לטיפול
-    type = db.Column(db.String(50), nullable=False)  # סוג הטיפול הנדרש
-    status = db.Column(db.String(20), default='pending')  # סטטוס ההתראה - ברירת מחדל: ממתין
-
-# ------------------------------------------------------
-# API - לקוחות
-# ------------------------------------------------------
-@app.route('/api/customers', methods=['GET'])
 def get_customers():
-    # שליפת כל הלקוחות מבסיס הנתונים
-    return jsonify([{  # המרת הנתונים לפורמט JSON
-        'id': c.id,
-        'name': c.name,
-        'phone': c.phone,
-        'email': c.email
-    } for c in Customer.query.all()])
+    # מביא את כל הלקוחות שלנו מהמערכת
+    conn = sqlite3.connect("rental_system.db")
+    c = conn.cursor()
+    c.execute("SELECT id, name, phone, email FROM Customer")
+    customers = c.fetchall()
+    conn.close()
+    return customers
 
-@app.route('/api/customers', methods=['POST'])
-def add_customer():
-    # הוספת לקוח חדש
-    data = request.json  # קבלת נתוני הלקוח מהבקשה
-    try:
-        customer = Customer(
-            id=data['id'],
-            name=data['name'],
-            phone=data['phone'],
-            email=data['email']
-        )
-        db.session.add(customer)  # הוספה לבסיס הנתונים
-        db.session.commit()  # שמירת השינויים
-        return jsonify({'message': 'Customer added successfully'}), 201  # החזרת הודעת הצלחה
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400  # החזרת הודעת שגיאה במקרה של כישלון
-
-@app.route('/api/customers/<customer_id>', methods=['PUT', 'DELETE', 'OPTIONS'])
-def customer_detail(customer_id):
-    # עדכון או מחיקת לקוח ספציפי
-    if request.method == 'OPTIONS':
-        # טיפול בבקשת OPTIONS (נדרש ל-CORS)
-        response = app.make_response(('', 200))
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Methods'] = 'PUT, DELETE, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-        return response
-
-    if request.method == 'PUT':
-        # עדכון פרטי לקוח
-        try:
-            data = request.json
-            customer = Customer.query.get(customer_id)
-            if not customer:
-                return jsonify({'error': 'Customer not found'}), 404
-            customer.name = data.get('name', customer.name)
-            customer.phone = data.get('phone', customer.phone)
-            customer.email = data.get('email', customer.email)
-            db.session.commit()
-            return jsonify({'message': 'Customer updated successfully'}), 200
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-
-    if request.method == 'DELETE':
-        # מחיקת לקוח
-        try:
-            customer = Customer.query.get(customer_id)
-            if not customer:
-                return jsonify({'error': 'Customer not found'}), 404
-            db.session.delete(customer)
-            db.session.commit()
-            return jsonify({'message': 'Customer deleted successfully'}), 200
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-
-    return jsonify({'error': 'Method not allowed'}), 405
-
-# ------------------------------------------------------
-# API - רכבים
-# ------------------------------------------------------
-@app.route('/api/vehicles', methods=['GET'])
 def get_vehicles():
-    # שליפת כל הרכבים
-    return jsonify([{  # המרת הנתונים לפורמט JSON
-        'licensePlate': v.license_plate,
-        'brand': v.brand,
-        'model': v.model,
-        'status': v.status
-    } for v in Vehicle.query.all()])
+    # מביא את כל הרכבים שיש לנו במערכת
+    conn = sqlite3.connect("rental_system.db")
+    c = conn.cursor()
+    c.execute("SELECT licensePlate, brand, model, status FROM Vehicle")
+    vehicles = c.fetchall()
+    conn.close()
+    return vehicles
 
-@app.route('/api/vehicles', methods=['POST'])
-def add_vehicle():
-    # הוספת רכב חדש
-    data = request.json
-    try:
-        vehicle = Vehicle(
-            license_plate=data['license_plate'],
-            brand=data['brand'],
-            model=data['model'],
-            year=data['year'],
-            status=data.get('status', 'available')
-        )
-        db.session.add(vehicle)
-        db.session.commit()
-        return jsonify({'message': 'Vehicle added successfully'}), 201
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
-
-@app.route('/api/vehicles/<license_plate>', methods=['PUT', 'DELETE', 'OPTIONS'])
-def vehicle_detail(license_plate):
-    # עדכון או מחיקת רכב ספציפי
-    if request.method == 'OPTIONS':
-        # טיפול בבקשת OPTIONS
-        response = app.make_response(('', 200))
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Methods'] = 'PUT, DELETE, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-        return response
-
-    if request.method == 'PUT':
-        # עדכון פרטי רכב
-        try:
-            data = request.json
-            vehicle = Vehicle.query.get(license_plate)
-            if not vehicle:
-                return jsonify({'error': 'Vehicle not found'}), 404
-            vehicle.brand = data.get('brand', vehicle.brand)
-            vehicle.model = data.get('model', vehicle.model)
-            vehicle.year = data.get('year', vehicle.year)
-            vehicle.status = data.get('status', vehicle.status)
-            db.session.commit()
-            return jsonify({'message': 'Vehicle updated successfully'}), 200
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-
-    if request.method == 'DELETE':
-        # מחיקת רכב
-        try:
-            vehicle = Vehicle.query.get(license_plate)
-            if not vehicle:
-                return jsonify({'error': 'Vehicle not found'}), 404
-            db.session.delete(vehicle)
-            db.session.commit()
-            return jsonify({'message': 'Vehicle deleted successfully'}), 200
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-
-    return jsonify({'error': 'Method not allowed'}), 405
-
-@app.route('/api/vehicles/<license_plate>/status', methods=['PATCH', 'OPTIONS'])
-def update_vehicle_status(license_plate):
-    # עדכון סטטוס רכב
-    if request.method == 'OPTIONS':
-        response = app.make_response(('', 200))
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Methods'] = 'PATCH, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-        return response
-    try:
-        data = request.json
-        vehicle = Vehicle.query.get(license_plate)
-        if not vehicle:
-            return jsonify({'error': 'Vehicle not found'}), 404
-        if 'status' not in data:
-            return jsonify({'error': 'Missing status field'}), 400
-        vehicle.status = data['status']
-        db.session.commit()
-        return jsonify({'message': 'Vehicle status updated successfully'}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
-
-# ------------------------------------------------------
-# API - השכרות
-# ------------------------------------------------------
-@app.route('/api/rentals', methods=['GET'])
 def get_rentals():
-    # שליפת כל ההשכרות
-    return jsonify([{  # המרת הנתונים לפורמט JSON
-        'id': r.id,
-        'customerId': r.customer_id,
-        'vehicleId': r.vehicle_id,
-        'startDate': r.start_date.isoformat(),
-        'endDate': r.end_date.isoformat(),
-        'totalPrice': r.total_price,
-        'status': r.status
-    } for r in Rental.query.all()])
+    # מביא את כל ההשכרות שיש במערכת, כולל שם הלקוח ומספר הרכב
+    conn = sqlite3.connect("rental_system.db")
+    c = conn.cursor()
+    c.execute("""
+        SELECT r.rentalId, c.name, v.licensePlate, r.startDate, r.endDate 
+        FROM Rental r
+        JOIN Customer c ON r.customerId = c.id
+        JOIN Vehicle v ON r.vehicleId = v.licensePlate
+        ORDER BY r.startDate DESC
+    """)
+    rentals = c.fetchall()
+    conn.close()
+    return rentals
 
-@app.route('/api/rentals', methods=['POST'])
+# הדפים השונים באתר
+
+@app.route('/')
+def index():
+    print('index route called, session:', dict(session))  # debug
+    if 'username' not in session:
+        print('no username in session, redirecting to login')  # debug
+        return redirect(url_for('login'))
+    # דף הבית - מציג סטטיסטיקות כלליות על המערכת
+    cars, customers, active_rentals, available = get_stats()
+    return render_template(
+        'index.html',
+        cars=cars,
+        customers=customers,
+        active_rentals=active_rentals,
+        available=available
+    )
+
+@app.route('/customers')
+def customers():
+    # דף הלקוחות - מציג את כל הלקוחות במערכת
+    customers_list = get_customers()
+    return render_template('customers.html', customers=customers_list)
+
+@app.route('/vehicles')
+def vehicles():
+    # דף הרכבים - מציג את כל הרכבים במערכת
+    vehicles_list = get_vehicles()
+    return render_template('vehicles.html', vehicles=vehicles_list)
+
+@app.route('/rentals')
+def rentals():
+    # דף ההשכרות - מציג את כל ההשכרות הפעילות והישנות
+    rentals_list = get_rentals()
+    today = date.today().isoformat()
+    return render_template('rentals.html', rentals=rentals_list, today=today)
+
+# פעולות שאפשר לעשות במערכת
+
+@app.route('/add_customer', methods=['POST'])
+def add_customer():
+    # הוספת לקוח חדש למערכת
+    # אם הלקוח כבר קיים (לפי תעודת זהות), נקבל הודעת שגיאה
+    customer_id = request.form.get('id')
+    name = request.form.get('name')
+    phone = request.form.get('phone')
+    email = request.form.get('email')
+    
+    conn = sqlite3.connect("rental_system.db")
+    c = conn.cursor()
+    try:
+        c.execute(
+            "INSERT INTO Customer (id, name, phone, email) VALUES (?, ?, ?, ?)",
+            (customer_id, name, phone, email)
+        )
+        conn.commit()
+        flash('הלקוח נוסף בהצלחה', 'success')
+    except sqlite3.IntegrityError:
+        flash('הלקוח כבר קיים במערכת', 'error')
+    finally:
+        conn.close()
+    return redirect(url_for('customers'))
+
+@app.route('/add_rental', methods=['POST'])
 def add_rental():
     # הוספת השכרה חדשה
-    data = request.json
+    # בודקים שהרכב פנוי ושהתאריכים הגיוניים
+    customer_id = request.form.get('customer_id')
+    vehicle_id = request.form.get('vehicle_id')
+    start_date = request.form.get('start_date')
+    end_date = request.form.get('end_date')
+    
+    conn = sqlite3.connect("rental_system.db")
+    c = conn.cursor()
     try:
-        rental = Rental(
-            customer_id=data['customer_id'],
-            vehicle_id=data['vehicle_id'],
-            start_date=datetime.fromisoformat(data['start_date']),
-            end_date=datetime.fromisoformat(data['end_date']),
-            total_price=data['total_price'],
-            status=data.get('status', 'active')
+        c.execute("""
+            INSERT INTO Rental (customerId, vehicleId, startDate, endDate) 
+            VALUES (?, ?, ?, ?)
+        """, (customer_id, vehicle_id, start_date, end_date))
+        c.execute("UPDATE Vehicle SET status = 'rented' WHERE licensePlate = ?", 
+                 (vehicle_id,))
+        conn.commit()
+        flash('ההשכרה נוספה בהצלחה', 'success')
+    except sqlite3.Error as e:
+        flash(f'שגיאה בהוספת ההשכרה: {str(e)}', 'error')
+    finally:
+        conn.close()
+    return redirect(url_for('rentals'))
+
+@app.route('/add_vehicle', methods=['POST'])
+def add_vehicle():
+    license_plate = request.form.get('license_plate')
+    brand = request.form.get('brand')
+    model = request.form.get('model')
+    
+    conn = sqlite3.connect("rental_system.db")
+    c = conn.cursor()
+    try:
+        c.execute(
+            """
+            INSERT INTO Vehicle (licensePlate, brand, model, status)
+            VALUES (?, ?, ?, 'available')
+            """,
+            (license_plate, brand, model)
         )
-        db.session.add(rental)
-        db.session.commit()
-        return jsonify({'message': 'Rental added successfully'}), 201
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
+        conn.commit()
+        flash('הרכב נוסף בהצלחה', 'success')
+    except sqlite3.IntegrityError:
+        flash('רכב עם מספר רישוי זה כבר קיים במערכת', 'error')
+    finally:
+        conn.close()
+    return redirect(url_for('vehicles'))
 
-# ------------------------------------------------------
-# API - התראות תחזוקה
-# ------------------------------------------------------
-@app.route('/api/maintenance/alerts', methods=['GET'])
-def get_maintenance_alerts():
-    # שליפת כל התראות התחזוקה
-    alerts = MaintenanceAlert.query.all()
-    return jsonify([{  # המרת הנתונים לפורמט JSON
-        'id': alert.id,
-        'vehicle_id': alert.vehicle_id,
-        'due_date': alert.due_date.isoformat(),
-        'type': alert.type,
-        'status': alert.status
-    } for alert in alerts])
-
-# ------------------------------------------------------
-# API - רכבים פנויים
-# ------------------------------------------------------
-@app.route('/api/vehicles/available', methods=['GET'])
-def get_available_vehicles():
-    # שליפת כל הרכבים שסטטוס שלהם הוא 'available'
-    available_vehicles = Vehicle.query.filter_by(status='available').all()
-    return jsonify([{
-        'license_plate': v.license_plate,
-        'brand': v.brand,
-        'model': v.model,
-        'year': v.year,
-        'status': v.status
-    } for v in available_vehicles])
-
-@app.route('/api/vehicles/check-availability', methods=['POST'])
-def check_vehicle_availability():
-    # בדיקת זמינות רכב בתאריכים מסוימים
-    data = request.json
+@app.route('/delete_vehicle', methods=['POST'])
+def delete_vehicle():
+    license_plate = request.form.get('license_plate')
+    
+    conn = sqlite3.connect("rental_system.db")
+    c = conn.cursor()
     try:
-        start_date = datetime.fromisoformat(data['start_date'])
-        end_date = datetime.fromisoformat(data['end_date'])
-        if start_date >= end_date:
-            return jsonify({'error': 'תאריך התחלה חייב להיות לפני תאריך סיום'}), 400
-        if start_date < datetime.now():
-            return jsonify({'error': 'לא ניתן להזמין רכב בתאריך שעבר'}), 400
-        busy_vehicles = Rental.query.filter(
-            Rental.status != 'cancelled',
-            Rental.vehicle_id == Vehicle.license_plate,
-            ((Rental.start_date <= end_date) & (Rental.end_date >= start_date))
-        ).with_entities(Rental.vehicle_id).distinct().all()
-        busy_vehicle_ids = [v[0] for v in busy_vehicles]
-        available_vehicles = Vehicle.query.filter(
-            Vehicle.status == 'available',
-            ~Vehicle.license_plate.in_(busy_vehicle_ids)
-        ).all()
-        return jsonify([{
-            'license_plate': v.license_plate,
-            'brand': v.brand,
-            'model': v.model,
-            'year': v.year
-        } for v in available_vehicles])
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
-
-@app.route('/api/vehicles/available-by-model', methods=['GET'])
-def get_available_vehicles_by_model():
-    # קיבוץ רכבים זמינים לפי דגם
-    available_vehicles = Vehicle.query.filter_by(status='available').all()
-    vehicles_by_model = {}
-    for vehicle in available_vehicles:
-        model_key = f"{vehicle.brand} {vehicle.model} ({vehicle.year})"
-        if model_key not in vehicles_by_model:
-            vehicles_by_model[model_key] = []
-        vehicles_by_model[model_key].append({
-            'license_plate': vehicle.license_plate,
-            'brand': vehicle.brand,
-            'model': vehicle.model,
-            'year': vehicle.year,
-            'status': vehicle.status
-        })
-    result = []
-    for model_key, vehicles in vehicles_by_model.items():
-        result.append({
-            'model_name': model_key,
-            'vehicles': vehicles,
-            'count': len(vehicles)
-        })
-    return jsonify(result)
-
-@app.route('/api/rentals/create-with-availability', methods=['POST'])
-def create_rental_with_availability():
-    # יצירת השכרה חדשה עם בדיקת זמינות
-    data = request.json
-    try:
-        start_date = datetime.fromisoformat(data['start_date'])
-        end_date = datetime.fromisoformat(data['end_date'])
-        if start_date >= end_date:
-            return jsonify({'error': 'תאריך התחלה חייב להיות לפני תאריך סיום'}), 400
-        if start_date < datetime.now():
-            return jsonify({'error': 'לא ניתן להזמין רכב בתאריך שעבר'}), 400
-        vehicle = Vehicle.query.get(data['vehicle_id'])
-        if not vehicle:
-            return jsonify({'error': 'הרכב המבוקש לא נמצא'}), 404
-        if vehicle.status != 'available':
-            return jsonify({'error': 'הרכב המבוקש אינו זמין להשכרה'}), 400
-        existing_rental = Rental.query.filter(
-            Rental.vehicle_id == data['vehicle_id'],
-            Rental.status != 'cancelled',
-            ((Rental.start_date <= end_date) & (Rental.end_date >= start_date))
-        ).first()
-        if existing_rental:
-            return jsonify({'error': 'הרכב כבר מושכר בתאריכים אלו'}), 400
-        days = (end_date - start_date).days
-        total_price = days * 200
-        rental = Rental(
-            customer_id=data['customer_id'],
-            vehicle_id=data['vehicle_id'],
-            start_date=start_date,
-            end_date=end_date,
-            total_price=total_price,
-            status='active'
+        # Check if vehicle is currently rented
+        c.execute(
+            """
+            SELECT COUNT(*) FROM Rental
+            WHERE vehicleId = ? AND endDate >= date('now')
+            """,
+            (license_plate,)
         )
-        vehicle.status = 'rented'
-        db.session.add(rental)
-        db.session.commit()
-        return jsonify({
-            'message': 'ההשכרה נוצרה בהצלחה',
-            'rental_id': rental.id,
-            'total_price': total_price,
-            'days': days
-        }), 201
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 400
+        active_rentals = c.fetchone()[0]
+        
+        if active_rentals > 0:
+            flash('לא ניתן למחוק רכב שנמצא בהשכרה פעילה', 'error')
+        else:
+            c.execute("DELETE FROM Vehicle WHERE licensePlate = ?", (license_plate,))
+            conn.commit()
+            flash('הרכב נמחק בהצלחה', 'success')
+    except sqlite3.Error as e:
+        flash(f'שגיאה במחיקת הרכב: {str(e)}', 'error')
+    finally:
+        conn.close()
+    return redirect(url_for('vehicles'))
 
-# ------------------------------------------------------
-# דפי HTML (למשל דף הוספת השכרה)
-# ------------------------------------------------------
-@app.route('/add-rental')
+@app.route('/delete_customer', methods=['POST'])
+def delete_customer():
+    customer_id = request.form.get('customer_id')
+    
+    conn = sqlite3.connect("rental_system.db")
+    c = conn.cursor()
+    try:
+        # Check if customer has active rentals
+        c.execute(
+            """
+            SELECT COUNT(*) FROM Rental
+            WHERE customerId = ? AND endDate >= date('now')
+            """,
+            (customer_id,)
+        )
+        active_rentals = c.fetchone()[0]
+        
+        if active_rentals > 0:
+            flash('לא ניתן למחוק לקוח עם השכרות פעילות', 'error')
+        else:
+            c.execute("DELETE FROM Customer WHERE id = ?", (customer_id,))
+            conn.commit()
+            flash('הלקוח נמחק בהצלחה', 'success')
+    except sqlite3.Error as e:
+        flash(f'שגיאה במחיקת הלקוח: {str(e)}', 'error')
+    finally:
+        conn.close()
+    return redirect(url_for('customers'))
+
+@app.route('/end_rental', methods=['POST'])
+def end_rental():
+    rental_id = request.form.get('rental_id')
+    
+    conn = sqlite3.connect("rental_system.db")
+    c = conn.cursor()
+    try:
+        # Get the vehicle ID for this rental
+        c.execute("SELECT vehicleId FROM Rental WHERE rentalId = ?", (rental_id,))
+        vehicle_id = c.fetchone()[0]
+        
+        # Update rental end date to today
+        c.execute(
+            """
+            UPDATE Rental
+            SET endDate = date('now')
+            WHERE rentalId = ?
+            """,
+            (rental_id,)
+        )
+        
+        # Update vehicle status to available
+        c.execute(
+            """
+            UPDATE Vehicle
+            SET status = 'available'
+            WHERE licensePlate = ?
+            """,
+            (vehicle_id,)
+        )
+        
+        conn.commit()
+        flash('ההשכרה הסתיימה בהצלחה', 'success')
+    except sqlite3.Error as e:
+        flash(f'שגיאה בסיום ההשכרה: {str(e)}', 'error')
+    finally:
+        conn.close()
+    return redirect(url_for('rentals'))
+
+@app.route('/add_rental_page')
 def add_rental_page():
-    # החזרת דף HTML להוספת השכרה
     return render_template('add_rental.html')
 
-# ------------------------------------------------------
-# התחברות (Login) - API + דף HTML
-# ------------------------------------------------------
-@app.route('/api/login', methods=['POST'])
-def api_login():
-    # התחברות דרך API (לשימוש פרונטנד)
-    data = request.json
-    username = data.get('username')
-    password = data.get('password')
-    conn = sqlite3.connect('rental_system.db')
+@app.route('/api/vehicles/available')
+def get_available_vehicles():
+    conn = sqlite3.connect("rental_system.db")
     c = conn.cursor()
-    c.execute(
-        "SELECT role FROM SystemUser WHERE username=? AND password=?",
-        (username, password)
-    )
-    result = c.fetchone()
-    conn.close()
-    if result:
-        return jsonify({'message': 'Login successful', 'role': result[0]}), 200
-    else:
-        return jsonify({'error': 'Invalid credentials'}), 401
+    try:
+        # בדיקה אם קיימת עמודת year בטבלה
+        c.execute("PRAGMA table_info(Vehicle)")
+        columns = [column[1] for column in c.fetchall()]
+        has_year = 'year' in columns
+        
+        # בניית השאילתה בהתאם לקיום עמודת year
+        if has_year:
+            query = """
+                SELECT licensePlate, brand, model, year 
+                FROM Vehicle 
+                WHERE status = 'available'
+                ORDER BY brand, model
+            """
+        else:
+            query = """
+                SELECT licensePlate, brand, model 
+                FROM Vehicle 
+                WHERE status = 'available'
+                ORDER BY brand, model
+            """
+        
+        c.execute(query)
+        vehicles = c.fetchall()
+        
+        # ארגון הרכבים לפי דגם
+        vehicles_by_model = {}
+        for vehicle in vehicles:
+            model_key = f"{vehicle[1]} {vehicle[2]}"  # brand + model
+            if model_key not in vehicles_by_model:
+                vehicles_by_model[model_key] = []
+            
+            vehicle_data = {
+                'license_plate': vehicle[0],
+                'brand': vehicle[1],
+                'model': vehicle[2]
+            }
+            
+            # הוספת שנה רק אם היא קיימת
+            if has_year and len(vehicle) > 3:
+                vehicle_data['year'] = vehicle[3]
+            
+            vehicles_by_model[model_key].append(vehicle_data)
+        
+        # המרה לפורמט הרצוי
+        result = []
+        for model_name, vehicles in vehicles_by_model.items():
+            result.append({
+                'model_name': model_name,
+                'vehicles': vehicles
+            })
+        
+        return jsonify(result)
+    except sqlite3.Error as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
 
-@app.route('/', methods=['GET'])
-def root():
-    # הפניה לדף התחברות HTML
-    return redirect(url_for('login'))
+@app.route('/api/customer/<customer_id>')
+def get_customer_by_id(customer_id):
+    conn = sqlite3.connect("rental_system.db")
+    c = conn.cursor()
+    try:
+        c.execute("SELECT name FROM Customer WHERE id = ?", (customer_id,))
+        customer = c.fetchone()
+        if customer:
+            return jsonify({'name': customer[0]})
+        else:
+            return jsonify({'error': 'לקוח לא נמצא'}), 404
+    except sqlite3.Error as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # דף התחברות HTML
-    error = None
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        conn = sqlite3.connect('rental_system.db')
+        conn = sqlite3.connect("rental_system.db")
         c = conn.cursor()
-        c.execute(
-            "SELECT role FROM SystemUser WHERE username=? AND password=?",
-            (username, password)
-        )
+        c.execute("SELECT role FROM SystemUser WHERE username=? AND password=?", (username, password))
         result = c.fetchone()
         conn.close()
         if result:
             session['username'] = username
             session['role'] = result[0]
-            return redirect(url_for('welcome'))
+            flash('התחברת בהצלחה', 'success')
+            return redirect(url_for('index'))
         else:
-            error = 'שם משתמש או סיסמה שגויים'
-    return render_template('login.html', error=error)
+            flash('שם משתמש או סיסמה שגויים', 'error')
+    return render_template('login.html')
 
-@app.route('/welcome')
-def welcome():
-    # דף ברוך הבא לאחר התחברות
-    if not session.get('username'):
-        return redirect(url_for('root_login'))
-    return f"<h2>ברוך הבא, {session['username']}!</h2>"
+@app.route('/logout')
+def logout():
+    session.clear()
+    flash('התנתקת מהמערכת', 'success')
+    return redirect(url_for('login'))
 
-# ------------------------------------------------------
-# הפעלת השרת
-# ------------------------------------------------------
+def open_browser():
+    time.sleep(2)
+    print('פותח דפדפן לכתובת http://127.0.0.1:5000 ...')
+    webbrowser.open('http://127.0.0.1:5000')
+
 if __name__ == '__main__':
-    with app.app_context():  # יצירת הקשר אפליקציה
-        db.create_all()  # יצירת כל הטבלאות בבסיס הנתונים
-    app.run(host='0.0.0.0', port=5001, debug=True)  # הפעלת השרת בפורט 5001 עם מצב דיבאג
+    # --- בדיקה והתקנת requirements.txt אם צריך ---
+    if os.path.exists('requirements.txt'):
+        try:
+            import pkg_resources
+            with open('requirements.txt') as f:
+                required = [line.strip() for line in f if line.strip() and not line.strip().startswith('#')]
+            installed = {pkg.key for pkg in pkg_resources.working_set}
+            missing = [r for r in required if r and r.split('==')[0].lower() not in installed]
+            if missing:
+                print('מוריד תלויות חסרות:', missing)
+                subprocess.check_call([sys.executable, '-m', 'pip', 'install'] + missing)
+        except Exception as e:
+            print('שגיאה בהתקנת חבילות:', e)
+            sys.exit(1)
+    else:
+        print('לא נמצא requirements.txt, מדלג על התקנת חבילות...')
+
+    # --- פתיחת דפדפן אוטומטית ב-thread נפרד ---
+    import threading
+    threading.Thread(target=open_browser).start()
+    app.run(port=5000, debug=True) 
