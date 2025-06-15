@@ -48,11 +48,11 @@ npm start
 ├── requirements.txt       # דרישות Python
 ├── frontend/             # תיקיית ה-Frontend
 │   ├── src/             # קוד המקור
-│   │   ├── components/  # קומפוננטות
+│   │   ├── components/  # חלקי המערכת
 │   │   ├── pages/      # דפים
 │   │   ├── services/   # שירותי API
 │   │   └── utils/      # פונקציות עזר
-│   └── public/         # קבצים סטטיים
+│   └── public/         # קבצים גנרים
 └── README.md           # תיעוד
 ```
 
